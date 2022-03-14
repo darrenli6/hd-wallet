@@ -80,3 +80,68 @@ func test_ganache() {
 
 - 私钥如何保存 
 
+```
+func test_keystore() {
+	// 助记词转化为种子
+	f, err := os.OpenFile(".secret", os.O_RDONLY, 0600)
+	defer f.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	contentByte, err := ioutil.ReadAll(f)
+
+	nm := string(contentByte)
+	// 种子转化为账户地址
+	//推导路径  再获取钱包
+	path := MustParseDerivationPath("m/44'/60'/0'/0/0")
+
+	wallet, err := NewFromMnemonic(nm, "")
+	if err != nil {
+		log.Panic("faile to NewFromMnemonic", err)
+	}
+	account, err := wallet.Derive(path, false)
+	if err != nil {
+		log.Panic("faile to Derive", err)
+	}
+
+	// fmt.Println(account.Address.Hex())
+
+	path = MustParseDerivationPath("m/44'/60'/0'/0/0")
+
+	account, err = wallet.Derive(path, false)
+	if err != nil {
+		log.Panic("failed to Derive", err)
+	}
+
+	// fmt.Println(account.Address.Hex())
+
+	pkey, err := wallet.derivePrivateKey(path)
+	if err != nil {
+		log.Panic("failed to derivePrivateKey", err)
+	}
+
+	// 得到私钥
+	fmt.Println(*pkey)
+
+	key := NewKeyFromECDSA(pkey)
+
+	hkds := NewHDKeyStore("./data")
+
+	//password
+	err = hkds.StoreKey(hkds.JoinPath(account.Address.Hex()), key, "123")
+
+	if err != nil {
+		log.Panic("failed to StoreKey", err)
+	}
+
+}
+
+```
+
+
+- 签名
+
+> 有私钥进行签名
+
+- 交易签名
+
